@@ -9,3 +9,4 @@ const RelatedArticles = () => {
 }
 
 export default RelatedArticles
+

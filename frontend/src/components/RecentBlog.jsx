@@ -42,7 +42,7 @@ const RecentBlog = () => {
     useEffect(() => {
         const getAllPublsihedBlogs = async () => {
             try {
-                const res = await axios.get(`https://mern-blog-ha28.onrender.com/api/v1/blog/get-published-blogs`, { withCredentials: true })
+                const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/blog/get-published-blogs`)
                 if (res.data.success) {
                     dispatch(setBlog(res.data.blogs))
                 }
@@ -62,10 +62,10 @@ const RecentBlog = () => {
             </div>
             <div className='max-w-7xl mx-auto flex gap-6'>
                 <div>
-                    <div className='mt-10 px-4 md:px-0'>
+                    <div className='mt-10 px-4 md:px-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                         {
-                            blog?.slice(0, 4)?.map((blog, index) => {
-                                return <BlogCardList key={index} blog={blog} />
+                            blog?.slice(0, 6)?.map((blog, index) => {
+                                return <BlogCard key={index} blog={blog} />
                             })
                         }
                     </div>
@@ -114,3 +114,4 @@ const RecentBlog = () => {
 }
 
 export default RecentBlog
+

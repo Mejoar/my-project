@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Test</title>
+</head>
+<body>
+    <h1>Image Loading Test</h1>
+    <h2>Direct image URL test:</h2>
+    <img src="/uploads/1753520606278-402256003.jpg" style="max-width: 400px; border: 1px solid #ccc;" alt="Test Image" onload="console.log('Image loaded successfully')" onerror="console.log('Image failed to load')">
+    
+    <h2>Full URL test:</h2>
+    <img src="http://localhost:3000/uploads/1753520606278-402256003.jpg" style="max-width: 400px; border: 1px solid #ccc;" alt="Test Image Full URL" onload="console.log('Full URL image loaded successfully')" onerror="console.log('Full URL image failed to load')">
+    
+    <script>
+        console.log('Test page loaded');
+        
+        // Test fetch API
+        fetch('/uploads/1753520606278-402256003.jpg')
+            .then(response => {
+                console.log('Fetch response status:', response.status);
+                console.log('Fetch response OK:', response.ok);
+            })
+            .catch(error => {
+                console.log('Fetch error:', error);
+            });
+    </script>
+</body>
+</html>

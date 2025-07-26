@@ -39,7 +39,7 @@ const ResponsiveMenu = ({ openNav, setOpenNav, logoutHandler }) => {
             </div>
             <div className='pb-20'>
                 <h1>
-                    Made with ❤️ by Rohit
+                    Made with ❤️ by <span className='bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent font-semibold'>Chris Dev</span>
                 </h1>
             </div>
         </div>

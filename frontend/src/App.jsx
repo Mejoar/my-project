@@ -16,6 +16,7 @@ import Comments from './pages/Comments'
 import UpdateBlog from './pages/UpdateBlog'
 import ProtectedRoute from './components/ProtectedRoute'
 import SearchList from './pages/SearchList'
+import SuperAdminDashboard from './pages/SuperAdminDashboard'
 
 const router = createBrowserRouter([
   {
@@ -36,7 +37,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/blogs/:blogId",
-    element: <><Navbar/><ProtectedRoute><BlogView /></ProtectedRoute></>
+    element: <><Navbar/><BlogView /><Footer/></>
   },
   {
     path: "/write-blog",
@@ -91,6 +92,10 @@ const router = createBrowserRouter([
     path: "/login",
     element: <><Navbar/><Login /></>
   },
+  {
+    path: "/superadmin",
+    element: <><Navbar/><ProtectedRoute><SuperAdminDashboard/></ProtectedRoute></>
+  },
 ])
 
 const App = () => {
@@ -102,3 +107,4 @@ const App = () => {
 }
 
 export default App
+

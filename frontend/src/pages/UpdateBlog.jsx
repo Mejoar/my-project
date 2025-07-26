@@ -12,12 +12,16 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
 import JoditEditor from 'jodit-react';
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import { toast } from 'sonner'
 import { setBlog } from '@/redux/blogSlice'
+import { getMockImage } from '../utils/mockImages'
+import { Sparkles, Wand2, RefreshCw, Plus, Loader2 } from 'lucide-react'
 
 const UpdateBlog = () => {
     const editor = useRef(null);
@@ -31,6 +35,14 @@ const UpdateBlog = () => {
     const { blog } = useSelector(store => store.blog)
     const selectBlog = blog.find(blog => blog._id === id)
     const [content, setContent] = useState(selectBlog.description);
+    
+    // AI Assistant States
+    const [aiLoading, setAiLoading] = useState(false)
+    const [contentPrompt, setContentPrompt] = useState("")
+    const [improvePrompt, setImprovePrompt] = useState("")
+    const [showContentDialog, setShowContentDialog] = useState(false)
+    const [showImproveDialog, setShowImproveDialog] = useState(false)
+    const [generatedContent, setGeneratedContent] = useState("")
 
     const [blogData, setBlogData] = useState({
         title: selectBlog?.title,
@@ -72,7 +84,7 @@ const UpdateBlog = () => {
         formData.append("file", blogData.thumbnail);
         try {
             setLoading(true)
-            const res = await axios.put(`https://mern-blog-ha28.onrender.com/api/v1/blog/${id}`, formData, {
+            const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/v1/blog/${id}`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 },
@@ -80,10 +92,14 @@ const UpdateBlog = () => {
             })
             if (res.data.success) {
                 toast.success(res.data.message)
-                // dispatch([...course, setCourse(res.data.course)])
-                console.log(blogData);
-
-
+                
+                // Update the blog in the Redux store
+                const updatedBlogData = blog.map(blogItem => 
+                    blogItem._id === id ? res.data.blog : blogItem
+                );
+                dispatch(setBlog(updatedBlogData));
+                
+                navigate('/dashboard/your-blog')
             }
         } catch (error) {
             console.log(error);
@@ -97,7 +113,7 @@ const UpdateBlog = () => {
         console.log("action", action);
 
         try {
-            const res = await axios.patch(`https://mern-blog-ha28.onrender.com/api/v1/blog/${id}`, {
+            const res = await axios.patch(`${import.meta.env.VITE_API_URL}/api/v1/blog/${id}`, {
                 params: {
                     action
                 },
@@ -118,7 +134,7 @@ const UpdateBlog = () => {
 
     const deleteBlog = async () => {
         try {
-            const res = await axios.delete(`https://mern-blog-ha28.onrender.com/api/v1/blog/delete/${id}`, { withCredentials: true })
+            const res = await axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/blog/delete/${id}`, { withCredentials: true })
             if (res.data.success) {
                 const updatedBlogData = blog.filter((blogItem) => blogItem?._id !== id);
                 dispatch(setBlog(updatedBlogData))
@@ -133,6 +149,94 @@ const UpdateBlog = () => {
         }
 
     }
+
+    // AI Assistant Functions
+    const generateContent = async () => {
+        if (!contentPrompt.trim()) {
+            toast.error('Please enter a topic for content generation');
+            return;
+        }
+
+        try {
+            setAiLoading(true);
+            const response = await axios.post('/api/v1/ai/generate', 
+                { prompt: contentPrompt, type: 'content' }, 
+                { withCredentials: true }
+            );
+            
+            if (response.data.success) {
+                setGeneratedContent(response.data.data);
+                toast.success('Content generated successfully!');
+            } else {
+                toast.error(response.data.message || 'Failed to generate content');
+            }
+        } catch (error) {
+            console.error('Error generating content:', error);
+            toast.error('Failed to generate content');
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    const improveContent = async () => {
+        const currentContent = content || blogData.description;
+        if (!currentContent || currentContent.trim() === '') {
+            toast.error('Please write some content first to improve it');
+            return;
+        }
+
+        try {
+            setAiLoading(true);
+            const response = await axios.post('/api/v1/ai/improve', 
+                { content: currentContent }, 
+                { withCredentials: true }
+            );
+            
+            if (response.data.success) {
+                setGeneratedContent(response.data.data);
+                toast.success('Content improved successfully!');
+                setShowImproveDialog(true);
+            } else {
+                toast.error(response.data.message || 'Failed to improve content');
+            }
+        } catch (error) {
+            console.error('Error improving content:', error);
+            toast.error('Failed to improve content');
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    const insertGeneratedContent = () => {
+        if (editor.current) {
+            const currentContent = content || '';
+            const newContent = currentContent + '\n\n' + generatedContent;
+            setContent(newContent);
+            setBlogData(prev => ({ ...prev, description: newContent }));
+            
+            // Update Jodit editor
+            if (editor.current.value !== undefined) {
+                editor.current.value = newContent;
+            }
+        }
+        setShowContentDialog(false);
+        setShowImproveDialog(false);
+        toast.success('Content added to your blog!');
+    };
+
+    const replaceWithGeneratedContent = () => {
+        setContent(generatedContent);
+        setBlogData(prev => ({ ...prev, description: generatedContent }));
+        
+        // Update Jodit editor
+        if (editor.current && editor.current.value !== undefined) {
+            editor.current.value = generatedContent;
+        }
+        
+        setShowContentDialog(false);
+        setShowImproveDialog(false);
+        toast.success('Content replaced!');
+    };
 
     return (
         <div className='pb-10 px-3 pt-20 md:ml-[320px]'>
@@ -164,6 +268,137 @@ const UpdateBlog = () => {
                             className="jodit_toolbar"
 
                         />
+                        
+                        {/* AI Assistant Section */}
+                        <div className='mt-4 p-4 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-600'>
+                            <h3 className='text-lg font-semibold mb-3 flex items-center gap-2'>
+                                <Wand2 className='h-5 w-5 text-purple-500' />
+                                AI Writing Assistant
+                            </h3>
+                            <div className='grid md:grid-cols-3 gap-3'>
+                                {/* Generate New Content */}
+                                <Dialog open={showContentDialog} onOpenChange={setShowContentDialog}>
+                                    <DialogTrigger asChild>
+                                        <Button variant='outline' className='h-auto p-3 flex flex-col items-start gap-2'>
+                                            <div className='flex items-center gap-2'>
+                                                <Sparkles className='h-4 w-4 text-blue-500' />
+                                                <span className='font-medium text-sm'>Generate Content</span>
+                                            </div>
+                                            <span className='text-xs text-gray-600 dark:text-gray-400'>Create new content from a topic</span>
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto'>
+                                        <DialogHeader>
+                                            <DialogTitle className='flex items-center gap-2'>
+                                                <Sparkles className='h-5 w-5 text-blue-500' />
+                                                Generate Blog Content
+                                            </DialogTitle>
+                                            <DialogDescription>
+                                                Describe what you want to write about, and AI will generate content for you.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className='space-y-4'>
+                                            <div>
+                                                <Label>Topic or Description</Label>
+                                                <Textarea 
+                                                    placeholder='e.g., Write about the benefits of modern web development frameworks like React and Vue' 
+                                                    value={contentPrompt}
+                                                    onChange={(e) => setContentPrompt(e.target.value)}
+                                                    rows={3}
+                                                />
+                                            </div>
+                                            <Button 
+                                                onClick={generateContent} 
+                                                disabled={aiLoading || !contentPrompt.trim()}
+                                                className='w-full'
+                                            >
+                                                {aiLoading ? (
+                                                    <><Loader2 className='mr-2 h-4 w-4 animate-spin' />Generating Content...</>
+                                                ) : (
+                                                    <><Sparkles className='mr-2 h-4 w-4' />Generate Content</>
+                                                )}
+                                            </Button>
+                                            {generatedContent && (
+                                                <div className='mt-4'>
+                                                    <Label>Generated Content:</Label>
+                                                    <div className='mt-2 p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 max-h-60 overflow-y-auto'>
+                                                        <div className='whitespace-pre-wrap text-sm' dangerouslySetInnerHTML={{ __html: generatedContent }} />
+                                                    </div>
+                                                    <div className='flex gap-2 mt-3'>
+                                                        <Button onClick={insertGeneratedContent} variant='default' size='sm'>
+                                                            <Plus className='mr-1 h-4 w-4' />Add to Blog
+                                                        </Button>
+                                                        <Button onClick={replaceWithGeneratedContent} variant='outline' size='sm'>
+                                                            <RefreshCw className='mr-1 h-4 w-4' />Replace Content
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </DialogContent>
+                                </Dialog>
+
+                                {/* Improve Existing Content */}
+                                <Button 
+                                    variant='outline' 
+                                    className='h-auto p-3 flex flex-col items-start gap-2'
+                                    onClick={improveContent}
+                                    disabled={aiLoading || (!content && !blogData.description)}
+                                >
+                                    <div className='flex items-center gap-2'>
+                                        <RefreshCw className='h-4 w-4 text-green-500' />
+                                        <span className='font-medium text-sm'>Improve Content</span>
+                                    </div>
+                                    <span className='text-xs text-gray-600 dark:text-gray-400'>Enhance your existing content</span>
+                                </Button>
+
+                                {/* Grammar Check */}
+                                <Button 
+                                    variant='outline' 
+                                    className='h-auto p-3 flex flex-col items-start gap-2'
+                                    disabled
+                                >
+                                    <div className='flex items-center gap-2'>
+                                        <Wand2 className='h-4 w-4 text-orange-500' />
+                                        <span className='font-medium text-sm'>Grammar Check</span>
+                                    </div>
+                                    <span className='text-xs text-gray-600 dark:text-gray-400'>Coming soon...</span>
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Improve Content Dialog */}
+                        <Dialog open={showImproveDialog} onOpenChange={setShowImproveDialog}>
+                            <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto'>
+                                <DialogHeader>
+                                    <DialogTitle className='flex items-center gap-2'>
+                                        <RefreshCw className='h-5 w-5 text-green-500' />
+                                        Improved Content
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        AI has enhanced your content. Choose how to apply the improvements.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className='space-y-4'>
+                                    {generatedContent && (
+                                        <div>
+                                            <Label>Improved Content:</Label>
+                                            <div className='mt-2 p-4 border rounded-lg bg-gray-50 dark:bg-gray-700 max-h-60 overflow-y-auto'>
+                                                <div className='whitespace-pre-wrap text-sm' dangerouslySetInnerHTML={{ __html: generatedContent }} />
+                                            </div>
+                                            <div className='flex gap-2 mt-3'>
+                                                <Button onClick={replaceWithGeneratedContent} variant='default' size='sm'>
+                                                    <RefreshCw className='mr-1 h-4 w-4' />Replace with Improved
+                                                </Button>
+                                                <Button onClick={insertGeneratedContent} variant='outline' size='sm'>
+                                                    <Plus className='mr-1 h-4 w-4' />Add as New Section
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                     <div>
                         <Label>Category</Label>
@@ -192,13 +427,20 @@ const UpdateBlog = () => {
                             accept="image/*"
                             className="w-fit dark:border-gray-300"
                         />
-                        {previewThumbnail && (
+                        <div className="mt-3">
+                            <p className="text-sm text-gray-600 mb-2">Preview:</p>
                             <img
-                                src={previewThumbnail}
-                                className="w-64 my-2"
-                                alt="Course Thumbnail"
+                                src={previewThumbnail || getMockImage(blogData.category || selectBlog?.category)}
+                                className="w-64 h-40 object-cover rounded-lg border"
+                                alt="Blog Thumbnail Preview"
+                                onError={(e) => {
+                                    e.target.src = getMockImage(blogData.category || selectBlog?.category);
+                                }}
                             />
-                        )}
+                            <p className="text-xs text-gray-500 mt-1">
+                                {previewThumbnail ? 'Custom thumbnail' : 'Using category mock image'}
+                            </p>
+                        </div>
                     </div>
                     <div className='flex gap-3'>
                         <Button variant="outline" onClick={()=>navigate(-1)}>Back</Button>
@@ -216,3 +458,4 @@ const UpdateBlog = () => {
 }
 
 export default UpdateBlog
+

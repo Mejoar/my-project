@@ -3,6 +3,12 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import getDataUri from "../utils/dataUri.js";
 import cloudinary from "../utils/cloudinary.js";
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 export const register = async (req, res) => {
@@ -125,8 +131,36 @@ export const updateProfile = async(req, res) => {
         const {firstName, lastName, occupation, bio, instagram, facebook, linkedin, github} = req.body;
         const file = req.file;
 
-        const fileUri = getDataUri(file)
-        let cloudResponse = await cloudinary.uploader.upload(fileUri)
+        let cloudResponse;
+        if (file) {
+            try {
+                const fileUri = getDataUri(file)
+                cloudResponse = await cloudinary.uploader.upload(fileUri)
+                console.log("✅ Cloudinary upload successful:", cloudResponse.secure_url);
+            } catch (cloudinaryError) {
+                console.log("❌ Cloudinary upload failed:", cloudinaryError.message);
+                console.log("💡 Falling back to local storage...");
+                
+                // Save file locally as fallback
+                try {
+                    const timestamp = Date.now();
+                    const fileExtension = path.extname(file.originalname) || '.jpg';
+                    const filename = `profile-${userId}-${timestamp}${fileExtension}`;
+                    const uploadPath = path.join(__dirname, '../public/uploads', filename);
+                    
+                    // Write file to local storage
+                    await fs.promises.writeFile(uploadPath, file.buffer);
+                    
+                    cloudResponse = {
+                        secure_url: `http://localhost:3000/uploads/${filename}`
+                    };
+                    console.log("✅ Local file saved:", cloudResponse.secure_url);
+                } catch (localError) {
+                    console.log("❌ Local file save failed:", localError.message);
+                    cloudResponse = null;
+                }
+            }
+        }
 
         const user = await User.findById(userId).select("-password")
         
@@ -146,7 +180,7 @@ export const updateProfile = async(req, res) => {
         if(linkedin) user.linkedin = linkedin
         if(github) user.github = github
         if(bio) user.bio = bio
-        if(file) user.photoUrl = cloudResponse.secure_url
+        if(file && cloudResponse?.secure_url) user.photoUrl = cloudResponse.secure_url
 
         await user.save()
         return res.status(200).json({
@@ -163,6 +197,31 @@ export const updateProfile = async(req, res) => {
         })
     }
 }
+
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.id;
+    const user = await User.findById(userId).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      user
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get profile"
+    });
+  }
+};
 
 export const getAllUsers = async (req, res) => {
     try {

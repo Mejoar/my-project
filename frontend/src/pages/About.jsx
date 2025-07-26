@@ -8,10 +8,10 @@ const About = () => {
         {/* Header Section */}
         <div className="text-center">
           <h1 className="md:text-5xl text-4xl font-extrabold  mb-4">
-            About Our Blog
+            About <span className='bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent'>Chris Dev</span>
           </h1>
           <p className="text-lg ">
-            A place to share thoughts, inspire others, and grow together.
+            A place to share thoughts, inspire others, and grow together through web development and tech insights.
           </p>
         </div>
 
@@ -24,18 +24,18 @@ const About = () => {
           />
           <div>
             <p className=" text-lg mb-4">
-              Welcome to our Blog App! We created this platform for readers,
-              writers, and thinkers to connect through stories, tutorials, and
-              creative insights. Whether you're a passionate blogger or someone
-              who loves reading, this space is built for you.
+              Welcome to Chris Dev! I'm passionate about web development and love sharing knowledge through
+              tutorials, insights, and creative solutions. Whether you're a fellow developer, student, or
+              tech enthusiast, this platform is designed to help you grow and learn.
             </p>
             <p className=" text-lg mb-4">
-              Our mission is to empower individuals to express themselves freely.
-              We offer simple tools to write, publish, and engage with others in
-              meaningful ways.
+              My mission is to create valuable content that helps developers solve real-world problems.
+              From MERN stack tutorials to modern web development practices, I share what I learn
+              and discover in my coding journey.
             </p>
             <p className=" text-lg">
-              Thank you for being a part of our growing community.
+              Thank you for being part of this journey. Feel free to reach out at mejoarwachira@gmail.com
+              if you have any questions or suggestions!
             </p>
           </div>
         </div>
@@ -52,3 +52,4 @@ const About = () => {
 };
 
 export default About;
+

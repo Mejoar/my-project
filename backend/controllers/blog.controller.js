@@ -46,13 +46,47 @@ export const updateBlog = async (req, res) => {
         }
         let thumbnail;
         if (file) {
-            const fileUri = getDataUri(file)
-            thumbnail = await cloudinary.uploader.upload(fileUri)
+            // Use local file storage only (skip Cloudinary)
+            try {
+                const fs = await import('fs');
+                const path = await import('path');
+                const uploadDir = path.default.join(process.cwd(), 'backend', 'public', 'uploads');
+                
+                // Create uploads directory if it doesn't exist
+                if (!fs.default.existsSync(uploadDir)) {
+                    fs.default.mkdirSync(uploadDir, { recursive: true });
+                }
+                
+                // Generate unique filename
+                const fileExtension = file.originalname.split('.').pop();
+                const fileName = `${Date.now()}-${Math.round(Math.random() * 1E9)}.${fileExtension}`;
+                const filePath = path.default.join(uploadDir, fileName);
+                
+                // Write file to disk
+                fs.default.writeFileSync(filePath, file.buffer);
+                
+                // Create URL for the uploaded file
+                const fileUrl = `/uploads/${fileName}`;
+                thumbnail = { secure_url: fileUrl };
+                console.log("Local file upload successful:", fileUrl);
+            } catch (localUploadError) {
+                console.log("Local upload failed:", localUploadError.message);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "File upload failed", 
+                    error: localUploadError.message 
+                });
+            }
         }
 
-        const updateData = {title, subtitle, description, category,author: req.id, thumbnail: thumbnail?.secure_url};
+        const updateData = {title, subtitle, description, category, author: req.id};
+        if (thumbnail?.secure_url) {
+            updateData.thumbnail = thumbnail.secure_url;
+            console.log('Setting thumbnail URL:', thumbnail.secure_url);
+        }
         blog = await Blog.findByIdAndUpdate(blogId, updateData, {new:true});
-
+        
+        console.log('Updated blog thumbnail:', blog.thumbnail);
         res.status(200).json({ success: true, message: "Blog updated successfully", blog });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error updating blog", error: error.message });
@@ -102,6 +136,50 @@ export const getPublishedBlog = async (_,res) => {
         return res.status(500).json({
             message:"Failed to get published blogs"
         })
+    }
+}
+
+// Get a single blog by ID (accessible without authentication, but only published blogs)
+export const getBlogById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const blog = await Blog.findById(id).populate({
+            path: 'author',
+            select: 'firstName lastName photoUrl'
+        }).populate({
+            path: 'comments',
+            sort: { createdAt: -1 },
+            populate: {
+                path: 'userId',
+                select: 'firstName lastName photoUrl'
+            }
+        });
+        
+        if (!blog) {
+            return res.status(404).json({
+                success: false,
+                message: "Blog not found"
+            });
+        }
+        
+        // Only return published blogs for public access
+        if (!blog.isPublished) {
+            return res.status(404).json({
+                success: false,
+                message: "Blog not found or not published"
+            });
+        }
+        
+        return res.status(200).json({
+            success: true,
+            blog
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to get blog"
+        });
     }
 }
 

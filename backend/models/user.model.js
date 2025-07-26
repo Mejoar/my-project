@@ -33,8 +33,11 @@ const userSchema = new mongoose.Schema({
     linkedin: { type: String, default: "" },
     github: { type: String, default: "" },
     facebook: { type: String, default: "" },
-
-
+    role: {
+        type: String,
+        enum: ['user', 'admin', 'superadmin'],
+        default: 'user'
+    }
 }, { timestamps: true })
 
 export const User = mongoose.model("User", userSchema)

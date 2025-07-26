@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Button } from './ui/button'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Input } from './ui/input'
-import Logo from "../assets/logo.png"
+import ChrisDevLogo from "../assets/chris-dev-logo.svg"
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'sonner'
@@ -56,7 +56,7 @@ const Navbar = () => {
     const logoutHandler = async (e) => {
 
         try {
-            const res = await axios.get(`https://mern-blog-ha28.onrender.com/api/v1/user/logout`, { withCredentials: true });
+            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/user/logout`, { withCredentials: true });
             if (res.data.success) {
                 navigate("/")
                 dispatch(setUser(null))
@@ -87,8 +87,8 @@ const Navbar = () => {
                 <div className='flex gap-7 items-center'>
                     <Link to={'/'}>
                         <div className='flex gap-2 items-center'>
-                            <img src={Logo} alt="" className='w-7 h-7 md:w-10 md:h-10 dark:invert' />
-                            <h1 className='font-bold text-3xl md:text-4xl'>Logo</h1>
+                            <img src={ChrisDevLogo} alt="Chris Dev Logo" className='w-8 h-8 md:w-12 md:h-12' />
+                            <h1 className='font-bold text-2xl md:text-3xl bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent'>Chris Dev</h1>
                         </div>
                     </Link>
                     <div className='relative hidden md:block'>
@@ -179,3 +179,4 @@ const Navbar = () => {
 }
 
 export default Navbar
+

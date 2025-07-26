@@ -53,7 +53,7 @@ const CommentBox = ({ selectedBlog }) => {
     useEffect(() => {
         const getAllCommentsOfBlog = async () => {
             try {
-                const res = await axios.get(`https://mern-blog-ha28.onrender.com/api/v1/comment/${selectedBlog._id}/comment/all`)
+                const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/comment/${selectedBlog._id}/comment/all`)
                 const data = res.data.comments
                 dispatch(setComment(data))
             } catch (error) {
@@ -65,8 +65,13 @@ const CommentBox = ({ selectedBlog }) => {
     }, [])
 
     const commentHandler = async () => {
+        if (!user) {
+            toast.error('Please login to comment on this blog');
+            return;
+        }
+        
         try {
-            const res = await axios.post(`https://mern-blog-ha28.onrender.com/api/v1/comment/${selectedBlog._id}/create`, { content }, {
+            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/comment/${selectedBlog._id}/create`, { content }, {
                 headers: {
                     "Content-Type": "application/json"
                 },
@@ -92,14 +97,13 @@ const CommentBox = ({ selectedBlog }) => {
             }
         } catch (error) {
             console.log(error);
-            toast.error("comment add nhi hua")
-
+            toast.error("Failed to add comment")
         }
     }
 
     const deleteComment = async (commentId) => {
         try {
-            const res = await axios.delete(`https://mern-blog-ha28.onrender.com/api/v1/comment/${commentId}/delete`, {
+            const res = await axios.delete(`${import.meta.env.VITE_API_URL}/api/v1/comment/${commentId}/delete`, {
                 withCredentials: true
             })
             if (res.data.success) {
@@ -119,7 +123,7 @@ const CommentBox = ({ selectedBlog }) => {
     const editCommentHandler = async (commentId) => {
         try {
             const res = await axios.put(
-                `https://mern-blog-ha28.onrender.com/api/v1/comment/${commentId}/edit`,
+                `${import.meta.env.VITE_API_URL}/api/v1/comment/${commentId}/edit`,
                 { content: editedContent },
                 {
                     withCredentials: true,
@@ -147,7 +151,7 @@ const CommentBox = ({ selectedBlog }) => {
      const likeCommentHandler = async (commentId) => {
          try {
              const res = await axios.get(
-                 `https://mern-blog-ha28.onrender.com/api/v1/comment/${commentId}/like`,
+                 `${import.meta.env.VITE_API_URL}/api/v1/comment/${commentId}/like`,
                  {
                      withCredentials: true,
                  }
@@ -172,22 +176,35 @@ const CommentBox = ({ selectedBlog }) => {
 
     return (
         <div>
-            <div className='flex gap-4 mb-4 items-center'>
-                <Avatar>
-                    <AvatarImage src={user.photoUrl} />
-                    <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <h3 className='font-semibold'>{user.firstName} {user.lastName}</h3>
-            </div>
-            <div className='flex gap-3'>
-                <Textarea
-                    placeholder="Leave a comment"
-                    className="bg-gray-100 dark:bg-gray-800"
-                    onChange={changeEventHandler}
-                    value={content}
-                />
-                <Button onClick={commentHandler}><LuSend /></Button>
-            </div>
+            {user ? (
+                <>
+                    <div className='flex gap-4 mb-4 items-center'>
+                        <Avatar>
+                            <AvatarImage src={user.photoUrl} />
+                            <AvatarFallback>CN</AvatarFallback>
+                        </Avatar>
+                        <h3 className='font-semibold'>{user.firstName} {user.lastName}</h3>
+                    </div>
+                    <div className='flex gap-3'>
+                        <Textarea
+                            placeholder="Leave a comment"
+                            className="bg-gray-100 dark:bg-gray-800"
+                            onChange={changeEventHandler}
+                            value={content}
+                        />
+                        <Button onClick={commentHandler}><LuSend /></Button>
+                    </div>
+                </>
+            ) : (
+                <div className='flex gap-3 mb-4'>
+                    <Textarea
+                        placeholder="Please login to leave a comment"
+                        className="bg-gray-100 dark:bg-gray-800"
+                        disabled
+                    />
+                    <Button disabled>Login to Comment</Button>
+                </div>
+            )}
             {
                 comment.length > 0 ? <div className='mt-7 bg-gray-100 dark:bg-gray-800 p-5 rounded-md'>
                     {
@@ -224,7 +241,7 @@ const CommentBox = ({ selectedBlog }) => {
                                                         onClick={() => likeCommentHandler(item._id)}
                                                     >
                                                         {
-                                                            item.likes.includes(user._id)
+                                                            user && item.likes.includes(user._id)
                                                                 ? <FaHeart fill='red' />
                                                                 : <FaRegHeart />
                                                         }
@@ -244,7 +261,7 @@ const CommentBox = ({ selectedBlog }) => {
                                     </div>
                                     {/* <Button><Trash2/></Button> */}
                                     {
-                                        user._id === item?.userId?._id ? <DropdownMenu>
+                                        user && user._id === item?.userId?._id ? <DropdownMenu>
                                             <DropdownMenuTrigger><BsThreeDots /></DropdownMenuTrigger>
                                             <DropdownMenuContent className="w-[180px]">
                                                 <DropdownMenuItem onClick={() => {
@@ -280,3 +297,4 @@ const CommentBox = ({ selectedBlog }) => {
 }
 
 export default CommentBox
+

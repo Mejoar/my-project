@@ -27,6 +27,7 @@ const Profile = () => {
     const dispatch = useDispatch()
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [imageKey, setImageKey] = useState(Date.now()) // For cache-busting
     const { user } = useSelector(store => store.auth)
     const [input, setInput] = useState({
         firstName: user?.firstName,
@@ -37,7 +38,7 @@ const Profile = () => {
         linkedin: user?.linkedin,
         github: user?.github,
         instagram: user?.instagram,
-        file: user?.photoUrl
+        file: null // Changed from user?.photoUrl to null for file uploads
     })
 
     const changeEventHandler = (e) => {
@@ -49,7 +50,20 @@ const Profile = () => {
     }
 
     const changeFileHandler = (e) => {
-        setInput({ ...input, file: e.target.files?.[0] })
+        const file = e.target.files?.[0];
+        if (file) {
+            // Validate file size (limit to 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('Image size should be less than 5MB');
+                return;
+            }
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                toast.error('Please select a valid image file');
+                return;
+            }
+        }
+        setInput({ ...input, file });
     }
 
     const submitHandler = async (e) => {
@@ -69,20 +83,39 @@ const Profile = () => {
 
         try {
             setLoading(true)
-            const res = await axios.put(`https://mern-blog-ha28.onrender.com/api/v1/user/profile/update`, formData, {
+            console.log('📝 Updating profile with data:', {
+                firstName: input.firstName,
+                lastName: input.lastName,
+                hasFile: !!input.file,
+                fileName: input.file?.name
+            });
+            
+            const res = await axios.put(`/api/v1/user/profile/update`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data"
                 },
                 withCredentials: true,
             })
+            
+            console.log('✅ Profile update response:', res.data);
+            
             if (res.data.success) {
                 setOpen(false)
                 toast.success(res.data.message)
                 dispatch(setUser(res.data.user))
+                // Force image cache-busting if a new file was uploaded
+                if (input.file) {
+                    setImageKey(Date.now());
+                }
+                // Reset file input after successful update
+                setInput(prev => ({ ...prev, file: null }));
+            } else {
+                toast.error(res.data.message || 'Failed to update profile')
             }
         } catch (error) {
-            console.log(error);
-
+            console.error('❌ Profile update error:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to update profile';
+            toast.error(errorMessage);
         } finally {
             setLoading(false)
         }
@@ -96,7 +129,11 @@ const Profile = () => {
                     {/* image section */}
                     <div className='flex flex-col items-center justify-center md:w-[400px]'>
                         <Avatar className="w-40 h-40 border-2">
-                            <AvatarImage src={user?.photoUrl || userLogo} />
+                            <AvatarImage 
+                                src={user?.photoUrl ? `${user.photoUrl}?v=${imageKey}` : userLogo} 
+                                alt="Profile Picture"
+                                style={{ objectFit: 'cover' }}
+                            />
                         </Avatar>
                         <h1 className='text-center font-semibold text-xl text-gray-700 dark:text-gray-300 my-3'>{user?.occupation || "Mern Stack Developer"}</h1>
                         <div className='flex gap-4 items-center'>
@@ -246,3 +283,4 @@ const Profile = () => {
 }
 
 export default Profile
+
