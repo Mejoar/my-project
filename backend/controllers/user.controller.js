@@ -240,3 +240,63 @@ export const getAllUsers = async (req, res) => {
       });
     }
   };
+
+export const createAdminUser = async (req, res) => {
+    try {
+        // Check if admin user already exists
+        const existingAdmin = await User.findOne({ email: 'admin@example.com' });
+        
+        if (existingAdmin) {
+            // Update existing user to be superadmin
+            const hashedPassword = await bcrypt.hash('admin123', 10);
+            await User.findOneAndUpdate(
+                { email: 'admin@example.com' },
+                { 
+                    password: hashedPassword,
+                    role: 'superadmin',
+                    firstName: existingAdmin.firstName || 'Admin',
+                    lastName: existingAdmin.lastName || 'User'
+                }
+            );
+            
+            return res.status(200).json({
+                success: true,
+                message: 'Admin user updated successfully',
+                admin: {
+                    email: 'admin@example.com',
+                    password: 'admin123',
+                    role: 'superadmin'
+                }
+            });
+        } else {
+            // Create new admin user
+            const hashedPassword = await bcrypt.hash('admin123', 10);
+            
+            const newAdmin = new User({
+                firstName: 'Admin',
+                lastName: 'User',
+                email: 'admin@example.com',
+                password: hashedPassword,
+                role: 'superadmin'
+            });
+            
+            await newAdmin.save();
+            
+            return res.status(201).json({
+                success: true,
+                message: 'Admin user created successfully',
+                admin: {
+                    email: 'admin@example.com',
+                    password: 'admin123',
+                    role: 'superadmin'
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error creating admin user:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to create admin user'
+        });
+    }
+};

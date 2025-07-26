@@ -1,5 +1,5 @@
 import express from "express"
-import { getAllUsers, login, logout, register, updateProfile, getProfile } from "../controllers/user.controller.js"
+import { getAllUsers, login, logout, register, updateProfile, getProfile, createAdminUser } from "../controllers/user.controller.js"
 import { isAuthenticated } from "../middleware/isAuthenticated.js"
 import { singleUpload } from "../middleware/multer.js"
 
@@ -11,5 +11,6 @@ router.route("/logout").get(logout)
 router.route("/profile").get(isAuthenticated, getProfile)
 router.route("/profile/update").put(isAuthenticated, singleUpload, updateProfile)
 router.get('/all-users', getAllUsers);
+router.post('/create-admin', createAdminUser);
 
 export default router;
