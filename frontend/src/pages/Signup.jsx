@@ -5,9 +5,9 @@ import { Label } from '@/components/ui/label'
 import React, { useState } from 'react'
 import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import { toast } from 'sonner'
 import auth from "../assets/auth.jpg"
+import API from '../utils/api'
 
 const Signup = () => {
 
@@ -32,12 +32,7 @@ const Signup = () => {
         console.log(user)
 
         try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/user/register`, user, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                withCredentials: true,
-            });
+            const response = await API.post('/api/v1/user/register', user);
             if (response.data.success) {
                 navigate('/login')
                 toast.success(response.data.message)

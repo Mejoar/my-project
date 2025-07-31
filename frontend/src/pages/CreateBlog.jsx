@@ -6,12 +6,12 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { setBlog } from '@/redux/blogSlice'
-import axios from 'axios'
 import { Loader2, Sparkles, Lightbulb, Wand2 } from 'lucide-react'
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import API from '../utils/api'
 
 const CreateBlog = () => {
     const [loading, setLoading] = useState(false)
@@ -40,9 +40,8 @@ const CreateBlog = () => {
 
         try {
             setAiLoading(true);
-            const response = await axios.post('/api/v1/ai/ideas', 
-                { topic: ideaPrompt }, 
-                { withCredentials: true }
+            const response = await API.post('/api/v1/ai/ideas', 
+                { topic: ideaPrompt }
             );
             
             if (response.data.success) {
@@ -67,9 +66,8 @@ const CreateBlog = () => {
 
         try {
             setAiLoading(true);
-            const response = await axios.post('/api/v1/ai/generate', 
-                { prompt: titlePrompt, type: 'title' }, 
-                { withCredentials: true }
+            const response = await API.post('/api/v1/ai/generate', 
+                { prompt: titlePrompt, type: 'title' }
             );
             
             if (response.data.success) {
@@ -98,12 +96,7 @@ const CreateBlog = () => {
         
         try {
             setLoading(true)
-            const res = await axios.post(`/api/v1/blog/`, { title, category }, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                withCredentials: true,
-            })
+            const res = await API.post('/api/v1/blog/', { title, category })
             if (res.data.success) {
                 dispatch(setBlog([...blog, res.data.blog]))
                 navigate(`/dashboard/write-blog/${res.data.blog._id}`)
