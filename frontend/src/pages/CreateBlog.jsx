@@ -288,7 +288,7 @@ const CreateBlog = () => {
                     </Button>
                     <Button className="" disabled={loading} onClick={createBlogHandler}>
                         {
-                            loading ? <>Loader2 className='mr-1 h-4 w-4 animate-spin' />Please wait</> : "Create"
+                            loading ? (<><Loader2 className='mr-1 h-4 w-4 animate-spin' />Please wait</>) : "Create"
                         }
                     </Button>
                 </div>
