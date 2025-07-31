@@ -12,7 +12,6 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import API from '../utils/api'
-import API_BASE_URL from '../utils/apiConfig'
 
 const CreateBlog = () => {
     const [loading, setLoading] = useState(false)
@@ -102,7 +101,7 @@ const CreateBlog = () => {
     };
 
     const createBlogHandler = async () => {
-        console.log('🚀 Creating blog with API_BASE_URL:', API_BASE_URL);
+        console.log('🚀 Creating blog with HARDCODED API (should be https://my-project-vzyy.onrender.com)');
         
         try {
             setLoading(true)
