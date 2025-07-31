@@ -36,18 +36,25 @@ app.use('/uploads', (req, res, next) => {
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(_dirname, 'backend', 'public', 'uploads')));
 
-// apis
- app.use("/api/v1/user", userRoute)
- app.use("/api/v1/blog", blogRoute)
- app.use("/api/v1/comment", commentRoute)
- app.use("/api/v1/superadmin", superAdminRoute)
- app.use("/api/v1/ai", aiRoute)
+// API routes MUST come before static file serving
+app.use("/api/v1/user", userRoute)
+app.use("/api/v1/blog", blogRoute)
+app.use("/api/v1/comment", commentRoute)
+app.use("/api/v1/superadmin", superAdminRoute)
+app.use("/api/v1/ai", aiRoute)
 
-// Only serve static files in production
+// Add a test endpoint to verify API is working
+app.get('/api/health', (req, res) => {
+    res.json({ message: 'API is healthy', timestamp: new Date().toISOString() });
+});
+
+// Only serve static files in production - AFTER API routes
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(_dirname,"/frontend/dist")));
-    app.get("*", (_, res)=>{
-        res.sendFile(path.resolve(_dirname, "frontend", "dist", "index.html"))
+    
+    // Catch-all handler: send back React's index.html file for non-API routes
+    app.get("*", (req, res) => {
+        res.sendFile(path.resolve(_dirname, "frontend", "dist", "index.html"));
     });
 } else {
     app.get("/", (req, res) => {
