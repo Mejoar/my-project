@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import API from '../utils/api'
+import API_BASE_URL from '../utils/apiConfig'
 
 const CreateBlog = () => {
     const [loading, setLoading] = useState(false)
@@ -92,24 +93,36 @@ const CreateBlog = () => {
         toast.success('Title selected!');
     };
 
+    // Debug function to test API configuration
+    const testApiConfig = () => {
+        console.log('🔧 Manual API Test:');
+        console.log('- VITE_API_URL:', import.meta.env.VITE_API_URL);
+        console.log('- API_BASE_URL:', API_BASE_URL);
+        console.log('- Current time:', new Date().toISOString());
+        toast.info(`API Base URL: ${API_BASE_URL}`);
+    };
+
     const createBlogHandler = async () => {
+        console.log('🚀 Creating blog with API_BASE_URL:', API_BASE_URL);
         
         try {
             setLoading(true)
             const res = await API.post('/api/v1/blog/', { title, category })
-            if (res.data.success) {
+            console.log('Blog creation response:', res);
+            
+            if (res && res.data && res.data.success) {
                 dispatch(setBlog([...blog, res.data.blog]))
                 navigate(`/dashboard/write-blog/${res.data.blog._id}`)
                 toast.success(res.data.message)
             } else {
-                toast.error("Something went wrong");
+                toast.error(res?.data?.message || "Something went wrong");
             }
         } catch (error) {
-            console.log(error)
+            console.log('Blog creation error:', error)
+            toast.error(error.response?.data?.message || error.message || 'Failed to create blog');
         } finally {
             setLoading(false)
         }
-
     }
     return (
         <div className='p-4 md:pr-20 h-screen md:ml-[320px] pt-20'>
@@ -272,10 +285,12 @@ const CreateBlog = () => {
                     </Select>
                 </div>
                 <div className='flex gap-2'>
-                    {/* <Button  variant="outline">Cancel</Button> */}
+                    <Button variant="outline" onClick={testApiConfig}>
+                        🔧 Test API Config
+                    </Button>
                     <Button className="" disabled={loading} onClick={createBlogHandler}>
                         {
-                            loading ? <><Loader2 className='mr-1 h-4 w-4 animate-spin' />Please wait</> : "Create"
+                            loading ? <>Loader2 className='mr-1 h-4 w-4 animate-spin' />Please wait</> : "Create"
                         }
                     </Button>
                 </div>
