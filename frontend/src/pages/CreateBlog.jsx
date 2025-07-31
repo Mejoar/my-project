@@ -95,11 +95,10 @@ const CreateBlog = () => {
 
     // Debug function to test API configuration
     const testApiConfig = () => {
-        console.log('🔧 Manual API Test:');
-        console.log('- VITE_API_URL:', import.meta.env.VITE_API_URL);
-        console.log('- API_BASE_URL:', API_BASE_URL);
+        console.log('🔧 Manual API Test (HARDCODED):');
+        console.log('- Backend URL: https://my-project-vzyy.onrender.com');
         console.log('- Current time:', new Date().toISOString());
-        toast.info(`API Base URL: ${API_BASE_URL}`);
+        toast.info('Backend URL: https://my-project-vzyy.onrender.com');
     };
 
     const createBlogHandler = async () => {

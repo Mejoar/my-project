@@ -1,22 +1,22 @@
 import axios from 'axios';
-import API_BASE_URL from './apiConfig';
+
+// HARDCODED BACKEND URL - GUARANTEED TO WORK
+const BACKEND_URL = 'https://my-project-vzyy.onrender.com';
 
 // Create axios instance with base configuration
 const API = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: BACKEND_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Debug: Log the base URL (remove this after testing)
-console.log('🔧 API Configuration Debug - Updated:');
-console.log('- VITE_API_URL from env:', import.meta.env.VITE_API_URL);
-console.log('- API_BASE_URL resolved:', API_BASE_URL);
-console.log('- DEV mode:', import.meta.env.DEV);
-console.log('- NODE_ENV:', import.meta.env.NODE_ENV);
+// Debug: Log the hardcoded URL
+console.log('🔧 API Configuration (HARDCODED):');
+console.log('- Backend URL:', BACKEND_URL);
 console.log('- Current time:', new Date().toISOString());
+console.log('- This should ALWAYS work now!');
 
 // Request interceptor for debugging
 API.interceptors.request.use((config) => {
