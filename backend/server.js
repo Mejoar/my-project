@@ -21,8 +21,13 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({extended:true}));
 app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:3000", "https://my-project-eta-green.vercel.app"],
-    credentials:true
+    origin: [
+        "http://localhost:5173", 
+        "http://localhost:3000", 
+        "https://my-project-eta-green.vercel.app",
+        "https://my-project-vzyy.onrender.com"  // Add backend URL for health checks
+    ],
+    credentials: true
 }))
 
 const _dirname = path.resolve()
