@@ -11,11 +11,12 @@ const API = axios.create({
 });
 
 // Debug: Log the base URL (remove this after testing)
-console.log('🔧 API Configuration Debug:');
+console.log('🔧 API Configuration Debug - Updated:');
 console.log('- VITE_API_URL from env:', import.meta.env.VITE_API_URL);
 console.log('- API_BASE_URL resolved:', API_BASE_URL);
 console.log('- DEV mode:', import.meta.env.DEV);
 console.log('- NODE_ENV:', import.meta.env.NODE_ENV);
+console.log('- Current time:', new Date().toISOString());
 
 // Request interceptor for debugging
 API.interceptors.request.use((config) => {
