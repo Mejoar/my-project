@@ -13,9 +13,10 @@ const API = axios.create({
 });
 
 // Debug: Log the hardcoded URL
-console.log('🔧 API Configuration (HARDCODED):');
+console.log('🔧 API Configuration (HARDCODED - V2):');
 console.log('- Backend URL:', BACKEND_URL);
 console.log('- Current time:', new Date().toISOString());
+console.log('- Deployment timestamp: 2025-01-31T01:58:00Z');
 console.log('- This should ALWAYS work now!');
 
 // Request interceptor for debugging
