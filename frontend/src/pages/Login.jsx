@@ -39,14 +39,19 @@ const Login = () => {
         },
         withCredentials: true
       });
-      if (response.data.success) {
+      console.log('Login response:', response); // Debug log
+      
+      if (response && response.data && response.data.success) {
         navigate('/')
         dispatch(setUser(response.data.user))
-        toast.success(response.data.message)
+        toast.success(response.data.message || 'Login successful!')
+      } else {
+        toast.error(response?.data?.message || 'Login failed')
       }
     } catch (error) {
-      console.log(error.response.data.message);
-
+      console.log('Login error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+      toast.error(errorMessage);
     }
 
   };

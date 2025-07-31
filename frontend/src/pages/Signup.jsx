@@ -33,17 +33,18 @@ const Signup = () => {
 
         try {
             const response = await API.post('/api/v1/user/register', user);
-            if (response.data.success) {
+            console.log('Signup response:', response); // Debug log
+            
+            if (response && response.data && response.data.success) {
                 navigate('/login')
-                toast.success(response.data.message)
+                toast.success(response.data.message || 'Registration successful!')
             } else {
-                toast.error(response.data.message)
+                toast.error(response?.data?.message || 'Registration failed')
             }
         } catch (error) {
-            console.log(error);
-            toast.error(error.response.data.message)
-
-
+            console.log('Signup error:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
+            toast.error(errorMessage);
         }
 
         // try {
